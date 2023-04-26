@@ -17,5 +17,8 @@ Matrix4x4 Transpose(const Matrix4x4& m);
 //単位行列の生成
 Matrix4x4 MakeIdentity4x4();
 
+static const int kRowHeight = 20;
+static const int kColumnWidth = 80;
+
 //4x4行列の描画
 void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix);
