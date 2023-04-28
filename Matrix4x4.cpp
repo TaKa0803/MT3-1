@@ -298,3 +298,30 @@ Matrix4x4 MakeRotateZMatrix(float radian) {
 }
 
 
+//３次元アフィン変換行列
+Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate) {
+	
+	//Scale
+	Matrix4x4 S = {
+		scale.x,0,0,0,
+		0,scale.y,0,0,
+		0,0,scale.z,0,
+		0,0,0,1
+	};
+	//Rotate
+	Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
+	Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
+	Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
+	Matrix4x4 R = Multiply(rotateXMatrix, Multiply(rotateYMatrix, rotateZMatrix));
+	//translate
+	Matrix4x4 T = {
+		1,0,0,0,
+		0,1,0,0,
+		0,0,1,0,
+		translate.x,translate.y,translate.z,1,
+	};
+
+	Matrix4x4 NEW = Multiply(S, Multiply(R, T));
+	return NEW;
+
+}

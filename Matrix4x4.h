@@ -34,8 +34,8 @@ Matrix4x4 MakeRotateYMatrix(float radian);
 //z軸回転行列
 Matrix4x4 MakeRotateZMatrix(float radian);
 
-
-
+//３次元アフィン変換行列
+Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate);
 
 
 
