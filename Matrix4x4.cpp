@@ -1,6 +1,9 @@
 #include<Matrix4x4.h>
 #include<Novice.h>
 #include<assert.h>
+#include<cmath>
+
+
 //加算
 Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2) {
 	Matrix4x4 NEW = {
@@ -260,3 +263,38 @@ void MatrixScreenPrintf(int x, int y, const Matrix4x4& matrix) {
 		}
 	}
 }
+
+//x軸回転行列
+Matrix4x4 MakeRotateXMatrix(float radian) {
+	Matrix4x4 NEW = {
+	1,0,0,0,
+0,std::cos(radian),std::sin(radian),0,
+0,-std::sin(radian),std::cos(radian),0,
+0,0,0,1,
+	};
+	return NEW;
+}
+//y軸回転行列
+Matrix4x4 MakeRotateYMatrix(float radian) {
+	Matrix4x4 NEW = {
+	std::cos(radian),0,-std::sin(radian),0,
+	0,1,0,0,
+	std::sin(radian),0,std::cos(radian),0,
+	0,0,0,1,
+	};
+	return NEW;
+
+}
+//z軸回転行列
+Matrix4x4 MakeRotateZMatrix(float radian) {
+	Matrix4x4 NEW = {
+		std::cos(radian),std::sin(radian),0,0,
+		-std::sin(radian),std::cos(radian),0,0,
+		0,0,1,0,
+		0,0,0,1,
+	};
+	return NEW;
+
+}
+
+
