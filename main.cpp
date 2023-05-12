@@ -14,6 +14,14 @@ const int kWindowWidth = 1280;
 const int kWindowHeight = 720;
 
 
+Vector3 Cross(const Vector3& v1, const Vector3& v2) {
+	return{
+		v1.y*v2.z-(v1.z*v2.y),
+		(v1.z*v2.x)-(v1.x*v2.z),
+		v1.x*v2.y-(v1.y*v2.x)
+	};
+}
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -35,6 +43,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 rotate = { 0,0,0 };
 
 	Vector3 translate = { 0,0,0 };
+
+	Vector3 v1{ 1.2f,-3.9f,2.5f };
+	Vector3 v2{ 2.8f,0.4f,-1.3f };
+	Vector3 cross = Cross(v1, v2);
+	
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -78,11 +91,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Vector3 ndcVertex = Transform(kLocalVertices[i], worldViewProjectionMatrix);
 			screenVertices[i] = Transform(ndcVertex, viewportMatrix);
 
-			Novice::ScreenPrintf(0, 20 * i, "%4.1f/%4.1f", screenVertices[i].x, screenVertices[i].y);
 		}
 
 		Novice::DrawTriangle((int)screenVertices[0].x, (int)screenVertices[0].y, (int)screenVertices[1].x, (int)screenVertices[1].y, (int)screenVertices[2].x, (int)screenVertices[2].y, RED, kFillModeSolid);
 		
+		VectorScreenPrintf(0, 0, cross, "Cross");
+
 		
 		// フレームの終了
 		Novice::EndFrame();

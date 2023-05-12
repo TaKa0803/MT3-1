@@ -1,6 +1,8 @@
 #include<renderingPipeline.h>
 #include<cmath>
 
+
+
 //透視投影行列
 Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip) {
 	return {
