@@ -20,7 +20,7 @@ Vector3 Subtract(Vector3 v1, Vector3 v2) {
 	return Answer;
 }
 //スカラー倍
-Vector3 Multipy(float scalar, Vector3 v) {
+Vector3 Scalar(float scalar, Vector3 v) {
 	Vector3 Answer = {
 		v.x * scalar ,
 		v.y * scalar,

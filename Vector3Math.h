@@ -6,7 +6,7 @@ Vector3 Add(Vector3 v1, Vector3 v2);
 //減算
 Vector3 Subtract(Vector3 v1, Vector3 v2);
 //スカラー倍
-Vector3 Multipy(float scalar, Vector3 v);
+Vector3 Scalar(float scalar, Vector3 v);
 //内積
 float Dot(Vector3 v1, Vector3 v2);
 
