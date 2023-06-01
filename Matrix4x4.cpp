@@ -53,7 +53,7 @@ Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
 //逆行列
 Matrix4x4 Inverse(const Matrix4x4& m) {
 	float A;
-	A= 1.0f / (
+	A= (
 		+ m.m[0][0] * m.m[1][1] * m.m[2][2] * m.m[3][3] + m.m[0][0] * m.m[1][2] * m.m[2][3] * m.m[3][1] + m.m[0][0] * m.m[1][3] * m.m[2][1] * m.m[3][2]
 
 		- m.m[0][0] * m.m[1][3] * m.m[2][2] * m.m[3][1] - m.m[0][0] * m.m[1][2] * m.m[2][1] * m.m[3][3] - m.m[0][0] * m.m[1][1] * m.m[2][3] * m.m[3][2]
@@ -70,7 +70,7 @@ Matrix4x4 Inverse(const Matrix4x4& m) {
 
 		+ m.m[0][3] * m.m[1][2] * m.m[2][1] * m.m[3][0] + m.m[0][2] * m.m[1][1] * m.m[2][3] * m.m[3][0] + m.m[0][1] * m.m[1][3] * m.m[2][2] * m.m[3][0]
 		);
-
+	A *= 1.0f/sqrtf(A * A);
 	Matrix4x4 NEW = {
 		A *  (m.m[1][1] * m.m[2][2] * m.m[3][3]
 			+ m.m[1][2] * m.m[2][3] * m.m[3][1]
