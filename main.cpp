@@ -16,6 +16,7 @@ const int kWindowHeight = 720;
 struct Sphere {
 	Vector3 center;	//中心点
 	float radius;	//半径
+	unsigned int color;//色
 };
 
 struct Segment {
@@ -31,118 +32,117 @@ Vector3 Cross(const Vector3& v1, const Vector3& v2) {
 	};
 }
 
-void DrawGrid(const Matrix4x4& ProjectionMatrix, const Matrix4x4& viewportMatrix,const Matrix4x4&viewMatrix) {
-	const float kGridHalfWidth = 2.0f;											//Gridの半分の幅
-	const uint32_t kSubdivision = 10;											//分割数
-	const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivision);		//１つ分の長さ
+
+
+
+
+Vector3 WorldtoScreen(Vector3 vec, const Matrix4x4& view, const Matrix4x4& viewport, const Matrix4x4& projection) {
+	Matrix4x4 world = MakeAffineMatrix({ 1,1,1 }, { 0,0,0 }, vec);
+	Matrix4x4 WVP = Multiply(world, Multiply(view, projection));
+	Vector3 ndc = Transform(vec, WVP);
+	return Transform(ndc, viewport);
+}
+
+void DrawGrid2(const Matrix4x4& view, const Matrix4x4& vieport, const Matrix4x4& projection) {
+	const float kGridHalfWidth = 2.0f;										//Grid半分の幅
+	const uint32_t kSubdivition = 10;										//分割数
+	const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivition);	//１つ分の長さ
+	//奥から手前への線を順々に引いていく
 	
-	//x方向に変更
-	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex) {
+	for (uint32_t xIndex = 0; xIndex <= kSubdivition; ++xIndex) {
 		//上の情報を使ってワールド座標系上の始点と終点を求める
-		Vector3 scale(1.0f, 1.0f, 1.0f);
-		Vector3 rotate(0, 0, 0);
-
-		float x = (float)xIndex - kSubdivision / 2;
-
-		Vector3 localS((float)x*kGridEvery, 0,-kGridHalfWidth);
-		Vector3 localE((float)x * kGridEvery, 0,kGridHalfWidth);
-
-		
-
-		Matrix4x4 worldS = MakeAffineMatrix(scale,rotate,localS);
-		Matrix4x4 worldE =MakeAffineMatrix(scale, rotate,localE);
-
-		Matrix4x4 worldViewProjectionMatrixS = Multiply(worldS, Multiply(viewMatrix, ProjectionMatrix));
-		Matrix4x4 worldViewProjectionMatrixE = Multiply(worldE, Multiply(viewMatrix, ProjectionMatrix));
-
-
-		Vector3 ndcStart = Transform(localS,worldViewProjectionMatrixS);
-		Vector3 ndcEnd = Transform(localE, worldViewProjectionMatrixE);
-
-		Vector3 start = Transform(ndcStart, viewportMatrix);
-		Vector3 end = Transform(ndcEnd, viewportMatrix);
-
+		float z = (float)xIndex - kSubdivition / 2.0f;
+		Vector3 st, ed;
+		st = { -kGridHalfWidth,0,z * kGridEvery };
+		ed = { +kGridHalfWidth,0,z * kGridEvery };
 		//スクリーン座標系まで変換をかける
-		//変換した座標を使って表示。色は薄い灰色（0xAAAAAAFF),原点は黒いぐらいがいいがなんでもいい
-		if (x == 0) {
-			Novice::DrawLine((int)start.x, (int)start.y, (int)end.x, (int)end.y, BLACK);
-		}
-		else {
-			Novice::DrawLine((int)start.x, (int)start.y, (int)end.x, (int)end.y, WHITE);
-		}
-	}
-
-	for (uint32_t zIndex = 0; zIndex <= kSubdivision; ++zIndex) {
-		//上の情報を使ってワールド座標系上の始点と終点を求める
-		Vector3 scale(1.0f, 1.0f, 1.0f);
-		Vector3 rotate(0, 0, 0);
-
-		float z = (float)zIndex -kSubdivision/2;
-
-		Vector3 localS(kGridHalfWidth,0,(float)z * kGridEvery);
-		Vector3 localE(-kGridHalfWidth,0,(float)z * kGridEvery);
-
-		Matrix4x4 worldS = MakeAffineMatrix(scale, rotate, localS);
-		Matrix4x4 worldE = MakeAffineMatrix(scale, rotate, localE);
-
-		Matrix4x4 worldViewProjectionMatrixS = Multiply(worldS, Multiply(viewMatrix, ProjectionMatrix));
-		Matrix4x4 worldViewProjectionMatrixE = Multiply(worldE, Multiply(viewMatrix, ProjectionMatrix));
-
-
-		Vector3 ndcStart = Transform(localS, worldViewProjectionMatrixS);
-		Vector3 ndcEnd = Transform(localE, worldViewProjectionMatrixE);
-
-		Vector3 start = Transform(ndcStart, viewportMatrix);
-		Vector3 end = Transform(ndcEnd, viewportMatrix);
-
-		//スクリーン座標系まで変換をかける
-		//変換した座標を使って表示。色は薄い灰色（0xAAAAAAFF),原点は黒いぐらいがいいがなんでもいい
+		Vector3 Sst, Sed;
+		Sst = WorldtoScreen(st, view, vieport, projection);
+		Sed = WorldtoScreen(ed, view, vieport, projection);
+		//変換した座標を使って表示。色は薄い灰色（0xAAAAAAFF),原点は黒ぐらいがいいがなんでもいい
 		if (z == 0) {
-			Novice::DrawLine((int)start.x, (int)start.y, (int)end.x, (int)end.y, BLACK);
+			Novice::DrawLine((int)Sst.x, (int)Sst.y, (int)Sed.x, (int)Sed.y, BLACK);
 		}
 		else {
-			Novice::DrawLine((int)start.x, (int)start.y, (int)end.x, (int)end.y, WHITE);
+			Novice::DrawLine((int)Sst.x, (int)Sst.y, (int)Sed.x, (int)Sed.y, WHITE);
 		}
 	}
+
+	for (uint32_t zIndex = 0; zIndex <= kSubdivition; ++zIndex) {
+		//
+		float x = (float)zIndex - kSubdivition / 2.0f;
+		Vector3 st, ed;
+		st = { x * kGridEvery ,0,-kGridHalfWidth};
+		ed = { x * kGridEvery ,0,kGridHalfWidth};
+		//スクリーン座標系まで変換をかける
+		Vector3 Sst, Sed;
+		Sst = WorldtoScreen(st, view, vieport, projection);
+		Sed = WorldtoScreen(ed, view, vieport, projection);
+		//変換した座標を使って表示。色は薄い灰色（0xAAAAAAFF),原点は黒ぐらいがいいがなんでもいい
+		if (x == 0) {
+			Novice::DrawLine((int)Sst.x, (int)Sst.y, (int)Sed.x, (int)Sed.y, BLACK);
+		}
+		else {
+			Novice::DrawLine((int)Sst.x, (int)Sst.y, (int)Sed.x, (int)Sed.y, WHITE);
+		}
+	}
+	
 }
 
-void DrawPhere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
-	const uint32_t kSubdivition = 16;		//bunkatu 
-	const float kLonEvery = (float)M_PI*2 * (1.0f / (float)kSubdivition); 
-	const float kLatEvery = (float)M_PI * (1.0f / (float) kSubdivition);
 
-	//緯度の方向に分割
+
+
+
+
+
+void DrawSphere(const Sphere& sphere, const Matrix4x4& view, const Matrix4x4& viewport,const Matrix4x4&projection ) {
+	const uint32_t kSubdivition = 16;										//分割数
+	const float kLonEvery = (float)M_PI * 2 * (1.0f / (float)kSubdivition); //軽度分割１つ分の角度
+	const float kLatEvery = (float)M_PI * (1.0f / (float)kSubdivition);		//緯度分割一つ分の角度
+	//緯度の方向に分割　-Π/2 ~Π/2
 	for (uint32_t latIndex = 0; latIndex < kSubdivition; ++latIndex) {
-		float lat = -(float)M_PI/2.0f+ kLatEvery * latIndex;	//現在の情報
-		//軽度の方向に分割
+		float lat =-(float)M_PI / 2.0f + kLatEvery * latIndex;				//現在の緯度
+		//経度の方向に分割0~2Π
 		for (uint32_t lonIndex = 0; lonIndex < kSubdivition; ++lonIndex) {
-			float lon = lonIndex * kLonEvery;
-			//
+			float lon = lonIndex * kLonEvery;								//現在の経度
+			//world座標系でのabcを求める
 			Vector3 a, b, c;
-			a = Scalar(sphere.radius,{ cosf(lat)*cosf(lon),sinf(lat),cosf(lat)*sinf(lon)});
-			a = Add(sphere.center,a);
-			b = Scalar(sphere.radius, { cosf(lat+kLatEvery) * cosf(lon),sinf(lat+kLatEvery),cosf(lat+kLatEvery) * sinf(lon) });
-			b = Add(sphere.center,b);
-			c = Scalar(sphere.radius, { cosf(lat) * cosf(lon+kLonEvery),sinf(lat),cosf(lat) * sinf(lon + kLonEvery) });
-			c = Add(sphere.center,c);
+			a = Scalar(sphere.radius, { cos(lat) * cos(lon),sin(lat),cos(lat) * sin(lon) });
+			b = Scalar(sphere.radius, { cos(lat + kLatEvery) * cos(lon),sin(lat + kLatEvery),cos(lat + kLatEvery) * sin(lon) });
+			c = Scalar(sphere.radius, { cos(lat) * cos(lon + kLonEvery),sin(lat),cos(lat) * sin(lon + kLonEvery) });
 			
-			Vector3 ndcVertex = Transform(a,viewProjectionMatrix);
-			a = Transform(ndcVertex, viewportMatrix);
+			a = Add(a, sphere.center);
+			b = Add(b, sphere.center);
+			c = Add(c, sphere.center);
 
-			ndcVertex = Transform(b, viewProjectionMatrix);
-			b = Transform(ndcVertex, viewportMatrix);
+			
+			//a,b,cをScreen座標系まで変換
+			Vector3 Sa, Sb, Sc;
+			Sa = WorldtoScreen(a, view, viewport, projection);
+			Sb = WorldtoScreen(b, view, viewport, projection);
+			Sc = WorldtoScreen(c, view, viewport, projection);
 
-			ndcVertex = Transform(c, viewProjectionMatrix);
-			c = Transform(ndcVertex, viewportMatrix);
+			//ab,acで線を引く
+			Novice::DrawLine((int)Sa.x, (int)Sa.y, (int)Sb.x, (int)Sb.y, sphere.color);
+			Novice::DrawLine((int)Sa.x, (int)Sa.y, (int)Sc.x, (int)Sc.y, sphere.color);
 
-			Novice::DrawLine((int)a.x, (int)a.y, (int)b.x, (int)b.y, color);
-			Novice::DrawLine((int)a.x, (int)a.y, (int)c.x, (int)c.y, color);
 		}
 	}
-
-
 }
 
+
+bool InCollision(const Sphere& s1, const Sphere& s2) {
+	Vector3 a= {
+		s1.center.x-s2.center.x,
+		s1.center.y - s2.center.y,
+		s1.center.z - s2.center.z,
+	};
+	float Hlong = sqrtf(a.x * a.x + a.y * a.y + a.z * a.z);
+	if (Hlong <=( s1.radius + s2.radius)) {
+		return true;
+	}
+	return false;
+}
 
 Vector3 Project(const Vector3& v1, const Vector3& v2) {
 	float dot = Dot(v1, v2);
@@ -168,7 +168,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char preKeys[256] = {0};
 
 	
-	Vector3 cameraposition = { 0.0f,1.9f,-6.49f };
+	Vector3 cameraTranslate = { 0.0f,1.9f,-6.49f };
 	Vector3 cameraRotate{ 0.26f,0.0f,0.0f };
 
 	Vector3 scale = { 1.0f,1.0f,1.0f };
@@ -176,13 +176,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 translate = { 0,0,0 };
 
 	
-	Sphere sphere{
+	Sphere sphere1{
 		{0,0},
 		1,
 	};
 
-	Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
-	Vector3 point{ -1.5f,0.6f,0.6f };
+	Sphere sphere2{
+		{2,0},
+		1,
+	};
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -194,78 +196,47 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Novice::GetHitKeyStateAll(keys);
 		
 
-		float camerapos[3] = {cameraposition.x,cameraposition.y,cameraposition.z};
-		float cameraR[3] = { cameraRotate.x,cameraRotate.y,cameraRotate.z };
-		cameraposition = { camerapos[0],camerapos[1],camerapos[2] };
-		cameraRotate = { cameraR[0],cameraR[1],cameraR[2] };
 		
-		rotate.y += (1.0f/60.0f)*(float)M_PI;
+		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f },cameraRotate, cameraTranslate);
 
-		Matrix4x4 worldMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, rotate, translate);
-		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f },cameraRotate, cameraposition);
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
-		//ViewportMatrixをつくる
 		Matrix4x4 viewportMatrix = MakeViewPortMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 		
-		//WVPMatrixをつくる
-		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 		
 		
 		
 		
-		DrawGrid(projectionMatrix,viewportMatrix,viewMatrix);
-
-
-		//円のWVP作成
-		//Matrix4x4 SphereworldMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, { 0,0,0 }, sphere.center);
-		//Matrix4x4 SphereviewProjection = Multiply(SphereworldMatrix, Multiply(viewMatrix, projectionMatrix));
-		//DrawPhere(sphere, SphereviewProjection, viewportMatrix, WHITE);
-
-		Vector3 project = Project(Subtract(point, segment.origin), segment.diff);
-		ImGui::InputFloat3("project", &project.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
-		Vector3 closestPoint = ClosestPoint(point, segment);
-
-
-		Sphere pointSphere{ point,0.01f };
-		Sphere closestPointSphere{ closestPoint,0.01f };
-
-		Matrix4x4 pointworld = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, { 0,0,0 }, pointSphere.center);
-		Matrix4x4 pointWVP = Multiply(pointworld, Multiply(viewMatrix, projectionMatrix));
-
-		Matrix4x4 pointworldE = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, { 0,0,0 }, closestPointSphere.center);
-		Matrix4x4 pointWVPE = Multiply(pointworldE, Multiply(viewMatrix, projectionMatrix));
-
-		DrawPhere(pointSphere,pointWVP, viewportMatrix, RED);
-		DrawPhere(closestPointSphere, pointWVPE, viewportMatrix, BLACK);
-
-
-
 		
-		//線分の描画
-		Matrix4x4 lineworld = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, { 0,0,0 }, segment.origin);
-		Matrix4x4 lineViewprojectM = Multiply(lineworld, Multiply(viewMatrix, projectionMatrix));
-		Vector3 start = Transform(Transform(segment.origin,lineViewprojectM), viewportMatrix);
+		DrawGrid2(viewMatrix, viewportMatrix, projectionMatrix);
 		
-		Matrix4x4 lineworldE = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, { 0,0,0 }, Add(segment.origin,segment.diff));
-		Matrix4x4 lineViewprojectME = Multiply(lineworldE, Multiply(viewMatrix, projectionMatrix));
-		Vector3 end = Transform(Transform(Add(segment.origin,segment.diff),lineViewprojectME), viewportMatrix);
 		
-		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
+
+
+		if (InCollision(sphere1, sphere2)) {
+			sphere1.color = RED;
+			sphere2.color = RED;
+
+		}
+		else {
+			sphere1.color = WHITE;
+			sphere2.color = WHITE;
+
+		}
+		
 
 
 		ImGui::Begin("Window");
-		ImGui::DragFloat3("CameraTranslate", &cameraposition.x, 0.01f);
+		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
 		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
-		ImGui::DragFloat3("SphereCenter", &sphere.center.x, 0.01f);
-		ImGui::DragFloat("SphereRadius", &sphere.radius, 0.01f);
+		ImGui::DragFloat3("SphereCenter", &sphere1.center.x, 0.01f);
+		ImGui::DragFloat("SphereRadius", &sphere1.radius, 0.01f);
 		ImGui::End();
 
-		//Novice::DrawTriangle((int)screenVertices[0].x, (int)screenVertices[0].y, (int)screenVertices[1].x, (int)screenVertices[1].y, (int)screenVertices[2].x, (int)screenVertices[2].y, RED, kFillModeSolid);
 		
-		
-		
-		
+		DrawSphere(sphere1, viewMatrix, viewportMatrix, projectionMatrix);
+		DrawSphere(sphere2, viewMatrix, viewportMatrix, projectionMatrix);
+
 		// フレームの終了
 		Novice::EndFrame();
 
