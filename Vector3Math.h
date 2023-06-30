@@ -10,6 +10,8 @@ Vector3 Scalar(float scalar, Vector3 v);
 //内積
 float Dot(Vector3 v1, Vector3 v2);
 
+//外積
+Vector3 OuterP(Vector3 v1, Vector3 v2);
 //長さ
 float Length(Vector3 v);
 
